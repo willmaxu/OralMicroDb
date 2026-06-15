@@ -1,42 +1,93 @@
-# OralMicroDb
-OralMicroDb integrates 77,852 oral microbiome samples from 439 projects across 52 countries with harmonized processing and metadata. It enables global analysis of oral microbiome ecology, revealing habitat-specific niches, biogeography, and age-associated microbial shifts.
+# 🌍 OralMicroDb: A Global Oral Microbiome Atlas
 
-# OralMicroDb: A Global Oral Microbiome Atlas
+OralMicroDb is a global atlas of the human oral microbiome, integrating **77,852 oral microbiome samples** from **439 projects** across **52 countries**.
 
-**OralMicroDb** is a global atlas of the human oral microbiome, integrating **77,852 oral microbiome samples** from **439 projects** across **52 countries**.
+Rather than serving solely as a database, OralMicroDb provides a unified ecological framework for understanding how **geography**, **oral ecological niches**, and **aging** jointly shape the human oral microbiome.
 
-This project is not only a database, but also a systematic effort to build a **Global Oral Microbiome Atlas** and reveal how **geography**, **oral ecological niches**, and **aging** jointly shape the structure of the human oral microbiome.
+---
 
-## Study Overview
+## 📖 Study Overview
 
-**Title:**  
-*OralMicroDb: A global atlas of the human oral microbiome reveals ecological niche specialization and age-associated remodeling*
+**Title**
 
-## Key Findings
+*OralMicroDb: A Global Atlas of the Human Oral Microbiome Reveals Ecological Niche Specialization and Age-Associated Remodeling*
 
-- The human oral microbiome is globally conserved but ecologically heterogeneous.
-- Geography and oral habitats jointly shape microbial community structure.
-- Distinct oral ecological niches exhibit strong microbial specialization.
-- Age-associated microbial remodeling is habitat-dependent.
-- Saliva is a promising substrate for microbiome-based aging assessment.
+### 🔬 Central Discovery
 
-Together, these findings suggest that the human oral microbiome is organized into globally shared yet habitat-specialized ecological niches, which undergo distinct aging-associated remodeling trajectories.
+The human oral microbiome is organized into **globally shared yet habitat-specialized ecological niches**, which undergo distinct **age-associated remodeling trajectories** across the lifespan.
 
-## Interactive Website
+---
 
-OralMicroDb also provides an interactive web portal for exploring oral microbial diversity across:
+## ✨ Key Findings
 
-- Taxa
-- Oral sampling sites
-- Diseases and phenotypes
-- Geographic regions
-- Age groups
-- Metadata distributions
+🌎 **Global conservation with ecological heterogeneity**
 
-Users can search oral microbes, oral sites, and disease phenotypes, and explore microbial abundance, prevalence, diversity, and ecological patterns across global oral microbiome datasets.
+The oral microbiome exhibits a globally conserved backbone while maintaining substantial ecological variation across populations.
 
-🌐 Website: [www.oralmicrodb.com](https://www.oralmicrodb.com)
+🗺️ **Geography shapes microbial communities**
 
-## Institution
+Geographic variation contributes significantly to oral microbial composition and diversity.
 
-Developed and maintained by the Central Laboratory and Fifth Clinical Division, Peking University School and Hospital of Stomatology.
+🦷 **Oral habitats define ecological niches**
+
+Distinct oral habitats harbor highly specialized microbial communities with unique ecological characteristics.
+
+👵 **Aging remodeling is habitat-dependent**
+
+Age-associated microbial remodeling follows habitat-specific trajectories across the oral ecosystem.
+
+💧 **Saliva is a promising aging biomarker**
+
+Salivary microbiomes exhibit the strongest age-discriminative patterns and represent a promising substrate for microbiome-based aging assessment.
+
+---
+
+## 🌐 Interactive Web Portal
+
+OralMicroDb provides an interactive platform for exploring oral microbiome diversity across:
+
+- 🦠 Taxonomy
+- 🦷 Oral habitats
+- 🏥 Diseases and phenotypes
+- 🌍 Geographic regions
+- 👥 Demographic variables
+- 📊 Diversity and ecological patterns
+
+Researchers can search microbes, oral sites, and disease phenotypes, and visualize microbial distributions across global oral microbiome datasets.
+
+### 🔗 Website
+
+**https://www.oralmicrodb.com**
+
+---
+
+## 📊 Database Statistics
+
+| Category | Count |
+|-----------|-----------|
+| 🌍 Countries | 52 |
+| 📚 Projects | 439 |
+| 🧫 Samples | 77,852 |
+| 🏥 Phenotypes | 84+ |
+| 🦷 Oral Habitats | 20+ |
+| 👥 Age Range | 0–100+ years |
+
+---
+
+## 🏛️ Institution
+
+Developed and maintained by the **Central Laboratory and Fifth Clinical Division, Peking University School and Hospital of Stomatology**.
+
+---
+
+## 📄 Citation
+
+If you use OralMicroDb in your research, please cite:
+
+> OralMicroDb: A Global Atlas of the Human Oral Microbiome Reveals Ecological Niche Specialization and Age-Associated Remodeling.
+
+---
+
+## 🚀 Vision
+
+We envision OralMicroDb as the foundation of a **Global Oral Microbiome Atlas**, enabling researchers to understand how microbial ecology, geographic variation, aging, and disease interact across the human oral ecosystem, ultimately advancing microbiome-based precision medicine and healthy aging.
