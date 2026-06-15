@@ -1,0 +1,302 @@
+Sys.setenv(LANGUAGE = "en")
+##禁止转化为因子
+options(stringsAsFactors = FALSE)
+##清空环境
+rm(list=ls())
+
+library(phyloseq)
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+library(tidyr)
+library(tidyverse)
+library(ggpubr)
+library(RColorBrewer)
+library(ggsci)
+library(microbiome) # data analysis and visualisation
+library(RColorBrewer) # nice color options
+library(DT) # interactive tables in html and markdown
+library(data.table) # alternative to data.frame
+library(rstatix)
+library(psych)
+library(pheatmap)
+library(corrplot)
+library(cowplot)  # 组合绘图包
+library(gridExtra)  # 网格绘图包
+library(vegan)
+library(DataExplorer)
+library(caret)
+library(pROC)
+library(tidyverse)
+library(lightgbm)
+
+
+##帮我读一下文件
+setwd("X:\\3/model")
+# 读取文件
+lines <- readLines("SRR_Acc_List.txt")
+# 合并为一行
+result <- paste(lines, collapse = " ")
+cat(result)
+write.table(result, file="SRR.txt")
+
+data1 <- read.table("1.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+data2 <- read.table("2.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+data1 <- read.table("1.csv", sep = ",", header = TRUE, stringsAsFactors = FALSE)
+data2 <- read.table("2.csv", sep = ",", header = TRUE, stringsAsFactors = FALSE)
+colnames(data1)[1] <- "Name"
+colnames(data2)[1] <- "Name"
+data1$Name <- as.character(data1$Name)
+data2$Name <- as.character(data2$Name)
+##data2 <- data2 %>% distinct(Name, .keep_all = TRUE)
+aerfa <- left_join(data1,data2,by="Name")
+write.csv(aerfa, "3.csv", row.names = T)
+
+setwd("X:\\3/model")
+# 1) 读表（自动识别分隔符，兼容 CSV/TSV）
+dt <- fread("SraRunTable.csv", sep = "auto", data.table = FALSE, showProgress = FALSE, check.names = FALSE)
+
+# 2) 取 Run 列并清洗
+runs <- dt[["Run"]]
+runs <- runs[!is.na(runs)]
+runs <- trimws(runs)
+runs <- runs[nzchar(runs)]
+runs <- unique(runs)  # 去重（保持原顺序）
+
+# 3) 打印为一行，用空格分隔
+cat(paste(runs, collapse = " "), file = "runs.txt")
+
+
+####################################################
+##微生物含量表格
+setwd("X:\\3/model/data1/merged_results/")
+data1 <- read.delim(
+  "merged_table.from_biom.txt",
+  header       = TRUE,
+  sep          = "\t",
+  row.names    = 1,       # 第一列是 feature / OTU ID
+  check.names  = FALSE,   # 保留原始样本名，不自动改
+  comment.char = "",      # 不把 # 当注释号
+  skip         = 1        # 跳过 "# Constructed from biom file" 那一行
+)
+head(data1, 10)
+
+# 1) 只选数值列（防止有非数值列混进来）
+num_cols <- vapply(data1, is.numeric, logical(1))
+data_num <- data1[, num_cols, drop = FALSE]
+
+# 2) 计算每个物种在所有样本中的总丰度
+total_abund <- rowSums(data_num, na.rm = TRUE)
+
+# （可选）如果你想排除某些行名，比如 Unassigned
+# total_abund <- total_abund[!rownames(data_num) %in% c("Unassigned")]
+
+# 3) 取总丰度 Top 10000 的物种名（行名）
+n_top <- min(10000, length(total_abund))
+top10000_taxa <- names(sort(total_abund, decreasing = TRUE))[seq_len(n_top)]
+
+# top1000_taxa 就是你要的“前1000微生物种名字”
+top10000_taxa[1:10]
+
+top10000_df <- data.frame(
+  taxa = top10000_taxa,
+  total_abundance = total_abund[top10000_taxa],
+  row.names = NULL
+)
+
+write.csv(top10000_df, "top10000_df.csv", row.names = T)
+
+# 确保是数值矩阵（有些表会读成 character）
+data_mat <- as.matrix(data1)
+mode(data_mat) <- "numeric"
+
+# 计算每个物种在所有样本的总丰度
+total_abund <- rowSums(data_mat, na.rm = TRUE)
+
+##########################################################################
+##metadata部分
+setwd("X:\\3/model/data1/merged_results")
+data2 <- read.delim(
+  "merged_sample.txt",
+  header       = TRUE,
+  sep          = "\t",
+  row.names    = 1,       # 第一列是 feature / OTU ID
+  check.names  = FALSE
+)
+
+###要是读不出来，有重复行，用下面的查找重复
+data2_check <- read.delim(
+  "merged_sample.txt",
+  header = TRUE,
+  sep = "\t",
+  check.names = FALSE,
+  stringsAsFactors = FALSE
+)
+
+colnames(data2_check)[1]
+feature_id <- data2_check[[1]]
+
+
+#####################################################
+
+data3 <- data2[-1, ]
+colnames(data3)
+table(data3$site_whole)
+table(data3$Country)
+table(data3$disease_clean)
+table(data3$City)
+table(data3$continent)
+table(data3$sex)
+
+length(table(data3$Country)) ##53
+length(table(data3$disease_clean)) ##80
+length(table(data3$continent)) ##7
+length(table(data3$site_whole)) ##44
+length(table(data3$Biosample)) ##457
+length(table(data3$sample_id)) ##106296
+
+##一些需要去掉空格的处理
+bad_saliva <- data3[
+  trimws(data3$site_whole) == "Saliva" & data3$site_whole != "Saliva",
+]
+table(bad_saliva$Biosample)
+table(data3$Biosample[data3$site_whole == "Saliva "])
+table(data3$Biosample[data3$site_whole == "Nasal "])
+
+table(data3$Biosample[data3$Country == "Asia"])
+
+table(data3$Biosample[data3$disease_clean == "Breast Cancer"])
+table(data3$Biosample[data3$disease_clean == "healthy"])
+table(data3$Biosample[data3$disease_clean == "Healthy "])
+table(data3$Biosample[data3$disease_clean == "HIV "])
+
+table(data3$Biosample[data3$continent == "North American"])
+table(data3$Biosample[data3$continent == "uncalculated"])
+
+table(data3$sex)
+table(data3$sex, useNA = "ifany")
+data3 %>%
+  mutate(
+    sex_show = paste0("[", sex, "]"),
+    sex_nchar = nchar(sex)
+  ) %>%
+  count(sex_show, sex_nchar, sort = TRUE)
+table(data3$Biosample[data3$sex == "Female"])
+table(data3$Biosample[data3$sex == "Female "])
+table(data3$Biosample[data3$sex == "Male"])
+table(data3$Biosample[data3$sex == "Male "])
+table(data3$Biosample[data3$sex == "man"])
+table(data3$Biosample[data3$sex == "woman"])
+table(data3$Biosample[data3$sex == "not applicable"])
+table(data3$Biosample[data3$sex == ""])
+table(data3$Biosample[data3$sex == "NA "])
+table(data3$Biosample[data3$sex == " "])
+
+
+##我想寻找一下“Saliva”在哪里
+idx <- which(data2 == "Saliva", arr.ind = TRUE)
+idx
+result <- data.frame(
+  row_index = idx[, "row"],
+  col_index = idx[, "col"],
+  row_name  = rownames(data2)[idx[, "row"]],
+  col_name  = colnames(data2)[idx[, "col"]],
+  value     = data2[idx]
+)
+result
+
+idx <- which(data5 == "Healthy ", arr.ind = TRUE)
+idx
+result <- data.frame(
+  row_index = idx[, "row"],
+  col_index = idx[, "col"],
+  row_name  = rownames(data_oral)[idx[, "row"]],
+  col_name  = colnames(data_oral)[idx[, "col"]],
+  value     = data_oral[idx]
+)
+result
+
+##统计下每一列有多少数据量
+col_counts <- sapply(data3, function(x) sum(!is.na(x) & x != ""))
+
+col_counts
+
+#######################################################################
+##合并sample.txt和alpha多样性
+data3$sample_id <- rownames(data3)
+data3 <- data3[, c("sample_id", setdiff(colnames(data3), "sample_id"))]
+
+##alpha.csv是四个多样性的合并
+alpha <- read.table("alpha.csv", sep = ",", header = TRUE, stringsAsFactors = FALSE)
+colnames(alpha)[1] <- "sample_id"
+
+data4 <- left_join(data3,alpha,by="sample_id")
+
+##age_group
+data4$age <- as.numeric(as.character(data4$age))
+
+data4$agegroup <- cut(data4$age, 
+                      breaks = c(-Inf, 0, 4, 9, 14, 24, 39, 64, Inf), 
+                      labels = c("0Y", "1-4Y", "5-9Y", "10-14Y", "15-24Y",
+                                 "25-39Y", "40-64Y", "≥65Y"), 
+                      right = TRUE)
+write.csv(data4, "sample_simple.csv", row.names = T)
+
+##site_group
+data5 <- data4 %>%
+  mutate(
+    site_whole = trimws(site_whole),
+    site_all = case_when(
+      site_whole == "Saliva" ~ "Saliva",
+      site_whole %in% c("Dental plaque","Subgingival plaque","Supragingival plaque","Impant plaque") ~ "Dental plaque",
+      site_whole %in% c("Gingival","Gingival crevicular fluid","Periodontal pockets") ~ "Periodontal_related",
+      site_whole %in% c("Oral mucosa","Buccal","Floor of mouth","Palate","Tongue") ~ "Oral mucosa",
+      site_whole %in% c("Calculus","Intracanal","Oral rinse","Oral swab") ~ "Oral other_related",
+      site_whole %in% c("Oral tumor-adjacent tissue","Oral tumor tissue") ~ "Oral tumor_related",
+      site_whole %in% c("Gastrointestinal","Gastrointestinal fluid","Stool") ~ "Digestive_related",
+      site_whole %in% c("Bronchial alveolar lavage fluid","Nasal","Nasopharyngeal","Oropharyngeal","Respiratory","Sputum") ~ "Respiratory_related",
+      site_whole %in% c("Breast milk","Placenta","Reproductive tract","Semen","Urine","Vagina") ~ "Reproductive_related",
+      site_whole %in% c("Tumor tissue","Tumor-adjacent tissue","Breast tissue") ~ "Tumor_related",
+      site_whole %in% c("Carotid atherosclerotic plaque","Cyst fluid","Heart","Blood","Skin") ~ "Others",
+      site_whole %in% c("Gloves","Water") ~ "Non_human",
+      TRUE ~ site_whole
+    )
+  )
+
+##disease_group
+data5 <- data5 %>%
+  mutate(
+    disease_clean = str_squish(disease_clean),
+    disease_all = case_when(
+      disease_clean == "Healthy" ~ "Healthy",
+      disease_clean == "Unknown" ~ "Unknown/Unspecified",
+      
+      disease_clean %in% c("Dental caries","Dental hard tissue and endodontic-related diseases") ~ "Oral_HardTissue_Endodontic",
+      disease_clean %in% c("Gingivitis","Periodontitis","Periodontal diseases","Periodontitis related") ~ "Oral_Periodontal",
+      disease_clean %in% c("Oral diseases related","Oral mucosal diseases","Oral mucosal diseases related") ~ "Oral_Mucosal_Other",
+      disease_clean %in% c("Dental treatment related","Orthodontic treatment","Malocclusion","Prosthodontic related") ~ "Oral_Treatment_Status",
+      disease_clean %in% c("Head and neck cancer","OSCC","OSCC related") ~ "Oral_cancer_Status",
+      
+      disease_clean %in% c("COPD","Respiratory diseases","Respiratory diseases related") ~ "Respiratory",
+      disease_clean %in% c("Gut diseases","Gut diseases related","IBD","UC","Liver diseases","Pancreatic diseases") ~ "Digestive_Hepatobiliary_Pancreas",
+      disease_clean %in% c("Renal diseases","Renal diseases related","Genitourinary diseases") ~ "Renal_Genitourinary",
+      
+      disease_clean %in% c("Obese","T1D","T2D","T2D related","Metabolic diseases","Metabolic diseases related","Hypertension","Cardiovascular diseases","Cardiovascular diseases related") ~ "Metabolic_Cardiovascular",
+      disease_clean %in% c("Pregnancy","Delivery woman","Post-partum","Lactating women","PCOS","Reproductive system diseases","Reproductive system diseases related") ~ "Reproductive_Pregnancy",
+      
+      disease_clean %in% c("COVID-19","HIV","HPV","Infection") ~ "Infection",
+      disease_clean %in% c("Immune diseases","Immune diseases related","Hematological diseases") ~ "Immune_Hematologic",
+      disease_clean %in% c("Neurological diseases","Neurological diseases related") ~ "Neurologic",
+      disease_clean %in% c("Psychiatric diseases","Psychiatric diseases related","Substance use related") ~ "Psychiatric_Substance",
+      
+      disease_clean %in% c("Cancer","Cancer related","Brain cancer","Breast cancer","Dermatological cancers","Genitourinary cancers",
+                           "Gut cancer","Gut cancer related","Hematologic cancers",
+                           "Pancreatic cancer","Respiratory cancers","Respiratory cancers related") ~ "Neoplasia",
+      
+      disease_clean %in% c("Extreme environment exposure") ~ "Extreme_Exposure",
+      disease_clean %in% c("Craniofacial diseases","Critical illness related","Dermatological diseases","Genetic diseases",
+                           "Infant","Musculoskeletal diseases") ~ "Other",
+      
+      TRUE ~ "Other"
+    )
+  )
