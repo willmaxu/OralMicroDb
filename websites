@@ -1,0 +1,728 @@
+###################网站设计
+###抽取oral的位点
+data_oral <- data5 %>% filter(site_all %in% c("Saliva","Dental plaque","Periodontal_related","Oral mucosa","Oral other_related","Oral tumor_related"))
+write.csv(data_oral, "data_oral_metadata.csv", row.names = T)
+##78798个样本
+
+colnames(data_oral)
+table(data_oral$site_all)
+##Dental plaque         Oral mucosa  Oral other_related  Oral tumor_related Periodontal_related Saliva
+##11887                9976                5159                 338                 851  50587
+table(data_oral$site_whole)
+##Buccal                   Calculus              Dental plaque             Floor of mouth                   Gingival 
+##997                        149                       1309                         74                        105 
+##Gingival crevicular fluid              Impant plaque                 Intracanal                Oral mucosa                 Oral rinse 
+##679                         90                         98                       2241                       2661 
+##Oral swab Oral tumor-adjacent tissue          Oral tumor tissue                     Palate        Periodontal pockets 
+##2251                         36                        302                         73                         67 
+##Saliva         Subgingival plaque       Supragingival plaque                     Tongue 
+##50587                       4785                       5703                       6591 
+table(data_oral$disease_all)
+##Digestive_Hepatobiliary_Pancreas                 Extreme_Exposure                          Healthy 
+2019                              195                            18484 
+##Immune_Hematologic                        Infection         Metabolic_Cardiovascular 
+785                             3476                             2916 
+##Neoplasia                       Neurologic               Oral_cancer_Status 
+4466                             1498                             1861 
+##Oral_HardTissue_Endodontic               Oral_Mucosal_Other                 Oral_Periodontal 
+2548                             1118                             5559 
+##Oral_Treatment_Status                            Other            Psychiatric_Substance 
+1860                             1216                             1564 
+##Renal_Genitourinary           Reproductive_Pregnancy                      Respiratory 
+588                             3990                              855 
+##Unknown/Unspecified 
+22938 
+
+length(table(data_oral$Country)) ##52
+length(table(data_oral$disease_clean)) ##78
+length(table(data_oral$continent)) ##7
+length(table(data_oral$site_whole)) ##19
+length(table(data_oral$Biosample)) ##439
+length(table(data_oral$sample_id)) ##77936
+
+
+###1.地图
+library(dplyr)
+library(ggplot2)
+library(patchwork)
+library(tidyr)
+library(tidyverse)
+library(tmap)
+country_summary <- data5 %>%
+  filter(Country != "" & !is.na(Country)) %>%   # 去掉空值
+  group_by(continent, Country) %>%
+  summarise(n_sample = n(), .groups = "drop")
+write.csv(country_summary, "country_summary.csv", row.names = T)
+
+data("World")
+tm_shape(World) +
+  tm_polygons("HPI")
+data("World")
+World1 <- World[,c(1,2,3)]
+View(World) ##看一下哪一行对应什么国家
+
+Samples <- read.table("Worldmicro16s.csv", sep=",", header=TRUE)
+Samples <- read.table("Worldmicro16s2.csv", sep=",", header=TRUE)
+World <- left_join(World,Samples,by="iso_a3") 
+tmap_mode("view")
+
+tm_shape(World) +
+  tm_polygons(c("Samples")) +
+  tm_fill(col = "black", style = "quantile", n = 4)+
+  tm_layout(bg.color = "#F0FFF0",
+            outer.bg.color="#FFDEAD",#地图框线外的填充色
+            space.color="#548B54")
+
+tm_shape(World) + 
+  tm_polygons(
+    fill = "Samples",
+    fill.scale = tm_scale(
+      values = "Red",
+      value.na = "transparent"
+    )
+  ) +
+  tm_layout(
+    legend.outside = TRUE,
+    legend.outside.position = "right"
+  )
+
+tm_shape(World) + 
+  tm_polygons(
+    fill = "Samples",
+    fill.scale = tm_scale(
+      values = "Blues",
+      value.na = "transparent"
+    )
+  ) +
+  tm_layout(
+    legend.outside = TRUE,
+    legend.outside.position = "right"
+  )
+
+
+##2.位点颜色分布图
+library(dplyr)
+library(ggplot2)
+a <- table(data_oral$site_whole)
+write.csv(a, "site_whole.csv", row.names = T)
+
+site_levels <- c(
+  "Saliva",
+  "Dental plaque",
+  "Subgingival plaque",
+  "Supragingival plaque",
+  "Impant plaque",
+  "Gingival",
+  "Gingival crevicular fluid",
+  "Periodontal pockets",
+  "Oral mucosa",
+  "Buccal",
+  "Floor of mouth",
+  "Palate",
+  "Tongue",
+  "Calculus",
+  "Intracanal",
+  "Oral rinse",
+  "Oral swab",
+  "Oral tumor-adjacent tissue",
+  "Oral tumor tissue"
+)
+
+site_colors <- c(
+  "Saliva" = "#B65A7A",
+  
+  "Dental plaque" = "#D77A3D",
+  "Subgingival plaque" = "#E09355",
+  "Supragingival plaque" = "#E8AD74",
+  "Impant plaque" = "#F0C695",
+  
+  "Gingival" = "#B9AFCB",
+  "Gingival crevicular fluid" = "#9C8FB8",
+  "Periodontal pockets" = "#7F6FA3",
+  
+  "Oral mucosa" = "#5F8DB8",
+  "Buccal" = "#76A0C4",
+  "Floor of mouth" = "#91B5CF",
+  "Palate" = "#4F78A8",
+  "Tongue" = "#6C94BD",
+  
+  "Calculus" = "#A8C9B5",
+  "Intracanal" = "#8FBEA5",
+  "Oral rinse" = "#6FAE9B",
+  "Oral swab" = "#4F9C8A",
+  
+  "Oral tumor-adjacent tissue" = "#D9A7B8",
+  "Oral tumor tissue" = "#B85C7A"
+)
+
+plot_df <- data_oral %>%
+  mutate(
+    site_group = case_when(
+      site_whole == "Saliva" ~ "Saliva",
+      site_whole %in% c("Dental plaque", "Subgingival plaque", "Supragingival plaque", "Impant plaque") ~ "Dental plaque",
+      site_whole %in% c("Gingival", "Gingival crevicular fluid", "Periodontal pockets") ~ "Periodontal_related",
+      site_whole %in% c("Oral mucosa", "Buccal", "Floor of mouth", "Palate", "Tongue") ~ "Oral mucosa",
+      site_whole %in% c("Calculus", "Intracanal", "Oral rinse", "Oral swab") ~ "Oral other_related",
+      site_whole %in% c("Oral tumor-adjacent tissue", "Oral tumor tissue") ~ "Oral tumor_related",
+      TRUE ~ "Other"
+    ),
+    site_whole = factor(site_whole, levels = rev(site_levels))
+  ) %>%
+  count(site_whole, site_group, name = "n")
+
+ggplot(plot_df, aes(x = n, y = site_whole, fill = site_whole)) +
+  geom_col(width = 0.7) +
+  scale_x_log10(
+    breaks = c(10, 100, 1000, 10000, 50000),
+    labels = c("10", "100", "1,000", "10,000", "50,000")
+  ) +
+  scale_fill_manual(values = site_colors) +
+  labs(
+    x = "Number of samples (log10)",
+    y = NULL
+  ) +
+  theme_classic(base_size = 13) +
+  theme(
+    legend.position = "none",
+    panel.grid.major.x = element_line(color = "grey90", linewidth = 0.4),
+    panel.grid.minor.x = element_blank(),
+    axis.line.y = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+
+##3.大洲分布图
+library(ggh4x)
+a <- table(data_oral$continent)
+write.csv(a, "continent.csv", row.names = T)
+##       Africa    Antarctica          Asia        Europe North America       Oceania South America 
+##1389            36         31775         19425         22135          1956          1220
+
+continent_levels <- c(
+  "Africa",
+  "Antarctica",
+  "Asia",
+  "Europe",
+  "North America",
+  "Oceania",
+  "South America"
+)
+
+continent_colors <- c(
+  "Africa" = "#F2B56E",
+  "Antarctica" = "#FDF1C8",
+  "Asia" = "#F57C6E",
+  "Europe" = "#71B8ED",
+  "North America" = "#84C3B7",
+  "Oceania" = "#B8AEEA",
+  "South America" = "#F2A8DA"
+)
+
+continent_df <- data.frame(
+  continent = c(
+    "Africa", "Antarctica", "Asia", "Europe",
+    "North America", "Oceania", "South America"
+  ),
+  n = c(1389, 36, 31775, 19425, 22135, 1956, 1220)
+) %>%
+  mutate(
+    continent = factor(continent, levels = rev(continent_levels))
+  )
+
+ggplot(continent_df, aes(x = n, y = continent, fill = continent)) +
+  geom_col(width = 0.7) +
+  scale_x_log10(
+    breaks = c(10, 100, 1000, 10000, 30000),
+    labels = c("10", "100", "1,000", "10,000", "30,000")
+  ) +
+  scale_fill_manual(values = continent_colors) +
+  labs(
+    x = "Number of samples (log10)",
+    y = NULL
+  ) +
+  theme_classic(base_size = 13) +
+  theme(
+    legend.position = "none",
+    panel.grid.major.x = element_line(color = "grey90", linewidth = 0.4),
+    panel.grid.minor.x = element_blank(),
+    axis.line.y = element_blank(),
+    axis.ticks.y = element_blank()
+  )
+
+
+##年龄分布图
+a <- table(data_oral$agegroup,data_oral$continent)
+write.csv(a, "agegroup1.csv", row.names = T)
+a <- table(data_oral$agegroup)
+write.csv(a, "agegroup2.csv", row.names = T)
+data_oral$agegroup <- cut(data_oral$age, 
+                      breaks = c(-Inf, 1, 4, 9, 14, 24, 39, 64, Inf), 
+                      labels = c("0Y", "1-4Y", "5-9Y", "10-14Y", "15-24Y",
+                                 "25-39Y", "40-64Y", "≥65Y"), 
+                      right = TRUE)
+table(data_oral$agegroup)
+
+age_levels <- c("0Y", "1-4Y", "5-9Y", "10-14Y",
+                "15-24Y", "25-39Y", "40-64Y", "≥65Y")
+
+age_colors <- c(
+  "0Y" = "#8AB5D2",
+  "1-4Y" = "#A2D9CB",
+  "5-9Y" = "#C9EBC6",
+  "10-14Y" = "#EFF9C0",
+  "15-24Y" = "#FEEDBB",
+  "25-39Y" = "#FFCC9B",
+  "40-64Y" = "#F7A292",
+  "≥65Y" = "#E88995"
+)
+
+# 总体
+age_all_df <- data_oral %>%
+  filter(!is.na(agegroup)) %>%
+  count(agegroup, name = "n") %>%
+  mutate(
+    agegroup = factor(agegroup, levels = age_levels)
+  )
+
+p_all <- ggplot(age_all_df, aes(x = agegroup, y = n, fill = agegroup)) +
+  geom_col(width = 0.75) +
+  scale_fill_manual(values = age_colors) +
+  labs(
+    x = NULL,
+    y = "Number of samples",
+    title = "All"
+  ) +
+  theme_classic(base_size = 13) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(hjust = 0.5, face = "bold")
+  )
+
+p_all
+
+# 各大洲
+continent_levels <- c(
+  "Africa", "Antarctica", "Asia", "Europe",
+  "North America", "Oceania", "South America"
+)
+
+age_continent_df <- data_oral %>%
+  filter(!is.na(agegroup), !is.na(continent)) %>%
+  mutate(
+    agegroup = factor(agegroup, levels = age_levels),
+    continent = factor(continent, levels = continent_levels)
+  ) %>%
+  count(continent, agegroup, name = "n")
+
+p_continent <- ggplot(age_continent_df, aes(x = agegroup, y = n, fill = agegroup)) +
+  geom_col(width = 0.75) +
+  scale_fill_manual(values = age_colors) +
+  facet_wrap(~ continent, ncol = 4, scales = "free_y") +
+  labs(
+    x = NULL,
+    y = "Number of samples"
+  ) +
+  theme_bw(base_size = 13) +
+  theme_classic(base_size = 13) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    
+    strip.background = element_rect(fill = "grey90", color = "black"),
+    strip.text = element_text(face = "bold"),
+    
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA)
+  )
+
+p_continent
+
+continent_strip_colors <- c(
+  "Africa" = "#0B8EA3",
+  "Antarctica" = "#F2CF61",
+  "Asia" = "#A8C46B",
+  "Europe" = "#CDB88E",
+  "North America" = "#D77A55",
+  "Oceania" = "#8CC7E8",
+  "South America" = "#B98576"
+)
+
+p_continent <- ggplot(age_continent_df, aes(x = agegroup, y = n, fill = agegroup)) +
+  geom_col(width = 0.75) +
+  scale_fill_manual(values = age_colors) +
+  facet_wrap2(
+    ~ continent,
+    ncol = 4,
+    scales = "free_y",
+    strip = strip_themed(
+      background_x = elem_list_rect(
+        fill = continent_strip_colors
+      ),
+      text_x = elem_list_text(
+        color = c("white", "black", "black", "black", "white", "black", "black"),
+        face = "bold"
+      )
+    )
+  ) +
+  labs(
+    x = NULL,
+    y = "Number of samples"
+  ) +
+  theme_bw(base_size = 13) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(color = "black", fill = NA),
+    strip.text = element_text(face = "bold")
+  )
+
+p_continent
+
+
+##性别
+library(scales)
+a <- table(data_oral$sex)
+write.csv(a, "sex.csv", row.names = T)
+a <- table(data_oral$sex,data_oral$continent)
+write.csv(a, "sex2.csv", row.names = T)
+
+sex_colors <- c(
+  "female" = "#E9B6BE",
+  "male" = "#6D8BC3"
+)
+
+continent_levels <- c(
+  "Africa", "Antarctica", "Asia", "Europe",
+  "North America", "Oceania", "South America"
+)
+
+# 1. 总体饼图
+sex_all_df <- data_oral %>%
+  filter(!is.na(sex), sex %in% c("female", "male")) %>%
+  count(sex, name = "n") %>%
+  mutate(
+    percent = n / sum(n),
+    label = paste0(sex, "\n", n, " (", percent(percent, accuracy = 0.1), ")")
+  )
+
+p_sex_all <- ggplot(sex_all_df, aes(x = "", y = n, fill = sex)) +
+  geom_col(width = 1, color = "white", linewidth = 0.6) +
+  coord_polar(theta = "y") +
+  scale_fill_manual(values = sex_colors) +
+  geom_text(
+    aes(label = label),
+    position = position_stack(vjust = 0.5),
+    size = 4
+  ) +
+  labs(title = "All", fill = NULL) +
+  theme_void(base_size = 13) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.position = "right"
+  )
+
+ggsave(
+  filename = "sex_pie_all.png",
+  plot = p_sex_all,
+  width = 5,
+  height = 4,
+  dpi = 300,
+  bg = "white"
+)
+
+
+# 2. 各大洲饼图
+sex_continent_df <- data_oral %>%
+  filter(
+    !is.na(sex),
+    sex %in% c("female", "male"),
+    !is.na(continent)
+  ) %>%
+  mutate(
+    continent = factor(continent, levels = continent_levels)
+  ) %>%
+  count(continent, sex, name = "n") %>%
+  group_by(continent) %>%
+  mutate(
+    percent = n / sum(n),
+    label = paste0(n, "\n", percent(percent, accuracy = 0.1))
+  ) %>%
+  ungroup()
+
+p_sex_continent <- ggplot(sex_continent_df, aes(x = "", y = n, fill = sex)) +
+  geom_col(width = 1, color = "white", linewidth = 0.5) +
+  coord_polar(theta = "y") +
+  scale_fill_manual(values = sex_colors) +
+  facet_wrap(~ continent, ncol = 4) +
+  geom_text(
+    aes(label = label),
+    position = position_stack(vjust = 0.5),
+    size = 3
+  ) +
+  labs(fill = NULL) +
+  theme_void(base_size = 13) +
+  theme(
+    legend.position = "bottom",
+    strip.text = element_text(face = "bold", size = 11)
+  )
+
+ggsave(
+  filename = "sex_pie_by_continent.png",
+  plot = p_sex_continent,
+  width = 9,
+  height = 5,
+  dpi = 300,
+  bg = "white"
+)
+
+
+
+##多样性年龄分布图
+age_levels <- c("0Y", "1-4Y", "5-9Y", "10-14Y",
+                "15-24Y", "25-39Y", "40-64Y", "≥65Y")
+
+age_colors <- c(
+  "0Y" = "#8AB5D2",
+  "1-4Y" = "#A2D9CB",
+  "5-9Y" = "#C9EBC6",
+  "10-14Y" = "#EFF9C0",
+  "15-24Y" = "#FEEDBB",
+  "25-39Y" = "#FFCC9B",
+  "40-64Y" = "#F7A292",
+  "≥65Y" = "#E88995"
+)
+
+border_colors <- c(
+  "0Y" = "#4B94C5",
+  "1-4Y" = "#52BA9A",
+  "5-9Y" = "#8AD07A",
+  "10-14Y" = "#DEF470",
+  "15-24Y" = "#FCC63E",
+  "25-39Y" = "#FAA34C",
+  "40-64Y" = "#F17549",
+  "≥65Y" = "#E05E6D"
+)
+
+continent_levels <- c(
+  "Africa", "Antarctica", "Asia", "Europe",
+  "North America", "Oceania", "South America"
+)
+
+continent_strip_colors <- c(
+  "Africa" = "#0B8EA3",
+  "Antarctica" = "#F2CF61",
+  "Asia" = "#A8C46B",
+  "Europe" = "#CDB88E",
+  "North America" = "#D77A55",
+  "Oceania" = "#8CC7E8",
+  "South America" = "#B98576"
+)
+
+plot_alpha_box <- function(df, metric, y_lab = metric, out_prefix = "alpha_diversity") {
+  
+  df_metric <- df %>%
+    filter(!is.na(agegroup), !is.na(.data[[metric]])) %>%
+    mutate(
+      agegroup = factor(agegroup, levels = age_levels),
+      continent = factor(continent, levels = continent_levels)
+    )
+  
+  p_all <- ggplot(df_metric, aes(x = agegroup, y = .data[[metric]],
+                                 fill = agegroup, color = agegroup)) +
+    geom_boxplot(
+      width = 0.75,
+      outlier.size = 0.6,
+      outlier.alpha = 0.6,
+      linewidth = 0.55
+    ) +
+    scale_fill_manual(values = age_colors) +
+    scale_color_manual(values = border_colors) +
+    labs(x = NULL, y = y_lab, title = "All") +
+    theme_bw(base_size = 13) +
+    theme(
+      legend.position = "none",
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      plot.title = element_text(hjust = 0.5, face = "bold", color = "white"),
+      plot.background = element_rect(fill = "white", color = NA),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_rect(color = "black", fill = NA),
+      strip.background = element_rect(fill = "#C95A0A", color = "black")
+    )
+  
+  p_continent <- ggplot(df_metric, aes(x = agegroup, y = .data[[metric]],
+                                       fill = agegroup, color = agegroup)) +
+    geom_boxplot(
+      width = 0.75,
+      outlier.size = 0.45,
+      outlier.alpha = 0.6,
+      linewidth = 0.5
+    ) +
+    scale_fill_manual(values = age_colors) +
+    scale_color_manual(values = border_colors) +
+    facet_wrap2(
+      ~ continent,
+      ncol = 4,
+      scales = "free_y",
+      strip = strip_themed(
+        background_x = elem_list_rect(fill = continent_strip_colors),
+        text_x = elem_list_text(
+          color = c("white", "black", "black", "black", "white", "black", "black"),
+          face = "bold"
+        )
+      )
+    ) +
+    labs(x = NULL, y = y_lab) +
+    theme_bw(base_size = 13) +
+    theme(
+      legend.position = "none",
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_rect(color = "black", fill = NA)
+    )
+  
+  ggsave(
+    filename = paste0(out_prefix, "_All_", metric, ".pdf"),
+    plot = p_all,
+    width = 4,
+    height = 4,
+    useDingbats = FALSE
+  )
+  
+  ggsave(
+    filename = paste0(out_prefix, "_Continent_", metric, ".pdf"),
+    plot = p_continent,
+    width = 9,
+    height = 5.5,
+    useDingbats = FALSE
+  )
+  
+  return(list(all = p_all, continent = p_continent))
+}
+
+metrics <- c("evenness", "faith_pd", "observed_features", "shannon")
+
+plots <- lapply(metrics, function(m) {
+  plot_alpha_box(
+    df = data_oral,
+    metric = m,
+    y_lab = m,
+    out_prefix = "oral_alpha"
+  )
+})
+
+names(plots) <- metrics
+
+
+for (metric in metrics) {
+  
+  df_plot <- data_oral %>%
+    filter(
+      !is.na(agegroup),
+      !is.na(.data[[metric]])
+    ) %>%
+    mutate(
+      agegroup = factor(agegroup, levels = age_levels),
+      continent = factor(continent, levels = continent_levels)
+    )
+  
+  # 1. 整体 All 图
+  p_all <- ggplot(
+    df_plot,
+    aes(
+      x = agegroup,
+      y = .data[[metric]],
+      fill = agegroup,
+      color = agegroup
+    )
+  ) +
+    geom_boxplot(
+      width = 0.75,
+      linewidth = 0.6,
+      outlier.size = 0.5,
+      outlier.alpha = 0.7
+    ) +
+    scale_fill_manual(values = age_colors) +
+    scale_color_manual(values = border_colors) +
+    labs(
+      x = NULL,
+      y = metric,
+      title = "All"
+    ) +
+    theme_bw(base_size = 13) +
+    theme(
+      legend.position = "none",
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      plot.title = element_text(hjust = 0.5, face = "bold"),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_rect(color = "black", fill = NA)
+    )
+  
+  ggsave(
+    filename = paste0(metric, "_boxplot_by_age_All.png"),
+    plot = p_all,
+    width = 4.5,
+    height = 4,
+    dpi = 300,
+    bg = "white"
+  )
+  
+  # 2. 分大洲图
+  p <- ggplot(
+    df_plot,
+    aes(
+      x = agegroup,
+      y = .data[[metric]],
+      fill = agegroup,
+      color = agegroup
+    )
+  ) +
+    geom_boxplot(
+      width = 0.75,
+      linewidth = 0.6,
+      outlier.size = 0.5,
+      outlier.alpha = 0.7
+    ) +
+    scale_fill_manual(values = age_colors) +
+    scale_color_manual(values = border_colors) +
+    facet_wrap2(
+      ~ continent,
+      ncol = 4,
+      scales = "free_y",
+      strip = strip_themed(
+        background_x = elem_list_rect(fill = continent_strip_colors),
+        text_x = elem_list_text(
+          face = "bold",
+          color = c("white", "black", "black", "black", "white", "black", "black")
+        )
+      )
+    ) +
+    labs(
+      x = NULL,
+      y = metric
+    ) +
+    theme_bw(base_size = 13) +
+    theme(
+      legend.position = "none",
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.border = element_rect(color = "black", fill = NA),
+      strip.text = element_text(face = "bold", size = 12)
+    )
+  
+  ggsave(
+    filename = paste0(metric, "_boxplot_by_age_continent.png"),
+    plot = p,
+    width = 10,
+    height = 6,
+    dpi = 300,
+    bg = "white"
+  )
+}
