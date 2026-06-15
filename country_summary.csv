@@ -1,0 +1,56 @@
+"","continent","Country","n_sample"
+"1","Africa","Algeria",32
+"2","Africa","Cameroon",250
+"3","Africa","Egypt",40
+"4","Africa","Ethiopia",185
+"5","Africa","South Africa",155
+"6","Africa","Uganda",990
+"7","Antarctica","Antarctica",36
+"8","Asia","China",15899
+"9","Asia","China-Hong Kong",208
+"10","Asia","China-Taiwan",248
+"11","Asia","India",459
+"12","Asia","Iran",636
+"13","Asia","Israel",782
+"14","Asia","Japan",8889
+"15","Asia","Jordan",304
+"16","Asia","Korea",356
+"17","Asia","Kuwait",92
+"18","Asia","Malaysia",293
+"19","Asia","Qatar",3042
+"20","Asia","Saudi Arabia",507
+"21","Asia","South Korea",3052
+"22","Asia","Thailand",498
+"23","Asia","Turkey",469
+"24","Europe","Austria",391
+"25","Europe","Belgium",458
+"26","Europe","Czech Republic",477
+"27","Europe","Denmark",1372
+"28","Europe","Estonia",440
+"29","Europe","Finland",1301
+"30","Europe","Germany",2974
+"31","Europe","Hungary",230
+"32","Europe","Ireland",425
+"33","Europe","Italy",2053
+"34","Europe","Latvia",198
+"35","Europe","Netherlands",9875
+"36","Europe","North Sea",92
+"37","Europe","Norway",18
+"38","Europe","Poland",302
+"39","Europe","Portugal",166
+"40","Europe","Russia",533
+"41","Europe","Slovakia",103
+"42","Europe","Slovenia",186
+"43","Europe","Spain",5330
+"44","Europe","Sweden",1794
+"45","Europe","Switzerland",862
+"46","Europe","United Kingdom",2908
+"47","North America","Barbados",123
+"48","North America","Canada",8914
+"49","North America","Mexico",417
+"50","North America","USA",21575
+"51","Oceania","Australia",2686
+"52","South America","Bolivia",483
+"53","South America","Brazil",771
+"54","South America","Chile",206
+"55","South America","Colombia",226
