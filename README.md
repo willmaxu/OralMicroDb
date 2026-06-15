@@ -39,4 +39,4 @@ Users can search oral microbes, oral sites, and disease phenotypes, and explore 
 
 ## Institution
 
-Developed and maintained by the Central Laboratory, Peking University School and Hospital of Stomatology.
+Developed and maintained by the Central Laboratory and Fifth Clinical Division, Peking University School and Hospital of Stomatology.
