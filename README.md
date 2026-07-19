@@ -1,6 +1,6 @@
 # 🌍 OralMicroDb: A Global Oral Microbiome Atlas
 
-OralMicroDb is a global atlas of the human oral microbiome, integrating **77,852 oral microbiome samples** from **441 projects** across **52 countries**.
+OralMicroDb is a global atlas of the human oral microbiome, integrating **77,852 oral microbiome samples** from **440 projects** across **52 countries**.
 
 Rather than serving solely as a database, OralMicroDb provides a unified ecological framework for understanding how **geography**, **oral ecological niches**, and **aging** jointly shape the human oral microbiome.
 
@@ -66,9 +66,9 @@ Researchers can search microbes, oral sites, and disease phenotypes, and visuali
 | Category | Count |
 |-----------|-----------|
 | 🌍 Countries | 52 |
-| 📚 Projects | 441 |
+| 📚 Projects | 440 |
 | 🧫 Samples | 77,852 |
-| 🏥 Phenotypes | 84+ |
+| 🏥 Phenotypes | 80+ |
 | 🦷 Oral Habitats | 20+ |
 | 👥 Age Range | 0–100+ years |
 
